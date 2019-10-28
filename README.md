@@ -1,0 +1,1 @@
+Simple tool on shapeless and cats to parse case classes from Map[String, Option[String]] with errors aggregation
