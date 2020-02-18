@@ -87,19 +87,15 @@ object FromFieldsTTest extends TestSuite {
         .constFallback('isPersonal, false)
         .from(rawInvalidInfo) ==> Invalid(
         NEC(
-          "Can't find `infoType` in external",
           "`undefined` is not member of (Default, Custom) on `type -> infoType`",
           "Can't find `infoType` in fallback",
           "Can't find `infoType` in external fallback",
-          "Can't find `site` in external",
           "Can't parse URL from `aaaaa`. Error: `no protocol: aaaaa` on `site`",
           "Can't find `site` in fallback",
           "Can't find `site` in external fallback",
-          "Can't find `creationDate` in external",
           "Can't parse date from `onmonmon`. Error: `Text 'onmonmon' could not be parsed at index 0` on `creationDate`",
           "Can't find `creationDate` in fallback",
           "Can't find `creationDate` in external fallback",
-          "Can't find `price` in external",
           "Field `currentPrice -> price` should be required",
           "Field `nominalPrice -> price` should be required on fallback[0] for `price`",
           "Can't find `price` in fallback",
@@ -138,20 +134,7 @@ object FromFieldsTTest extends TestSuite {
         .computed('b, "aaaa".invalidNec)
         .computed('c, "why".invalidNec)
         .from(fields) ==> Invalid(
-        NEC(
-          "Error `nooo` on external for a",
-          "No key `a` in fields",
-          "Can't find `a` in fallback",
-          "Can't find `a` in external fallback",
-          "Error `aaaa` on external for b",
-          "No key `b` in fields",
-          "Can't find `b` in fallback",
-          "Can't find `b` in external fallback",
-          "Error `why` on external for c",
-          "No key `c` in fields",
-          "Can't find `c` in fallback",
-          "Can't find `c` in external fallback"
-        )
+        NEC("Error `nooo` on external for a", "Error `aaaa` on external for b", "Error `why` on external for c")
       )
     }
 
@@ -186,7 +169,6 @@ object FromFieldsTTest extends TestSuite {
         .from(fields) ==>
       Invalid(
         NEC(
-          "Can't find `b` in external",
           "No key `b` in fields",
           "Field `c -> b` should be required on fallback[0] for `b`",
           "No key `cc -> b` in fields on fallback[1] for `b`",
@@ -195,6 +177,32 @@ object FromFieldsTTest extends TestSuite {
           "Can't find `b` in external fallback"
         )
       )
+    }
+
+    "support prefix" - {
+      val fields = Map("kek.a" -> "value".some, "kek.b" -> "value2".some)
+
+      case class Test(a: String, b: String)
+
+      assert(FromFieldsT.to[Test].from(fields, prefix = "kek") == Test("value", "value2").validNec)
+    }
+
+    "support deep structure" - {
+      val fields = Map(
+        "inner1.a" -> "aa".some,
+        "inner1.b" -> "bb".some,
+        "inner2.a" -> "aaa".some,
+        "inner2.c" -> "ccc".some,
+        "d"        -> "ddd".some
+      )
+
+      case class Inner1(a: String, b: String)
+
+      case class Inner2(a: String, c: String)
+
+      case class Outer(inner1: Inner1, inner2: Option[Inner2], d: String)
+
+      assert(FromFieldsT.to[Outer].from(fields) == Outer(Inner1("aa", "bb"), Inner2("aaa", "ccc").some, "ddd").validNec)
     }
 
     "one more demo case" - {
@@ -220,7 +228,6 @@ object FromFieldsTTest extends TestSuite {
         .from(fields) ==>
       Invalid(
         NEC(
-          "Can't find `count` in external",
           "No key `count` in fields",
           "Field `firstCount -> count` should be required on fallback[0] for `count`",
           "No key `secondCount -> count` in fields on fallback[1] for `count`",

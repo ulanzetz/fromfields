@@ -1,6 +1,18 @@
 name := "fromfields"
 
-version := "0.1"
+organization := "com.github.ulanzetz"
+
+publishTo := {
+  if (isSnapshot.value) {
+    Some(Opts.resolver.sonatypeSnapshots)
+  } else sonatypePublishToBundle.value
+}
+
+licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+
+publishMavenStyle := true
+
+version := "1.0.0"
 
 scalaVersion := "2.13.1"
 
